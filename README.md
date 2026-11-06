@@ -4,6 +4,10 @@ An app store for Android TV that lists open-source TV apps from GitHub and insta
 
 Google Play on TV only carries apps that publish there. Plenty of good TV apps only live on GitHub, where installing one means a phone, a download link and a guess at which APK fits your box. Open Shelf does that part for you.
 
+![Open Shelf on Android TV](docs/demo.gif)
+
+[Watch the full-quality video](docs/demo.mp4)
+
 ## What it does
 
 - Lists about 2,900 Android TV apps from GitHub, in 18 categories
@@ -13,6 +17,17 @@ Google Play on TV only carries apps that publish there. Plenty of good TV apps o
 - Checks the signing key before installing an update, and holds the update if the key changed
 - My Apps shows what's installed, with updates for apps in the catalog
 - Light and dark themes, and a choice of accent colours
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Discover](docs/screenshots/01-discover.png) | ![Categories](docs/screenshots/02-categories.png) |
+| Discover | Categories |
+| ![A category](docs/screenshots/03-category-page.png) | ![An app page](docs/screenshots/04-app-page.png) |
+| A category | An app page |
+| ![Search](docs/screenshots/05-search.png) | ![Settings](docs/screenshots/07-settings.png) |
+| Search | Settings |
 
 ## Install
 
