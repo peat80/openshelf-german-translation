@@ -273,7 +273,7 @@ private fun Clock(modifier: Modifier) {
 private fun Discover(wallId: String, onWall: (String) -> Unit, openApp: (String) -> Unit, openRoom: (String) -> Unit, handoff: FocusHandoff) {
     val ctx = LocalContext.current
     val tick = Device.tick
-    val first = remember { Catalog.visible.firstOrNull { it.art.banner != null && it.art.wall != null && it.runsHere } ?: Catalog.apps.first() }
+    val first = remember(Prefs.hideStreams) { Catalog.visible.firstOrNull { it.art.banner != null && it.art.wall != null && it.runsHere } ?: Catalog.apps.first() }
     val wall = Catalog.byId(wallId) ?: first
     var browsing by remember { mutableStateOf(false) }
     val heroH by animateDpAsState(if (browsing) 150.dp else 268.dp, tween(320), label = "hero")
@@ -309,10 +309,10 @@ private fun Discover(wallId: String, onWall: (String) -> Unit, openApp: (String)
                 }
             }
         }
-        val tv = remember { Catalog.visible.filter { it.art.banner != null && it.runsHere }.take(40) }
-        val recent = remember { Catalog.visible.sortedByDescending { it.date }.take(40) }
-        val starred = remember { Catalog.visible.take(40) }
-        val rooms = remember { roomsOf() }
+        val tv = remember(Prefs.hideStreams) { Catalog.visible.filter { it.art.banner != null && it.runsHere }.take(40) }
+        val recent = remember(Prefs.hideStreams) { Catalog.visible.sortedByDescending { it.date }.take(40) }
+        val starred = remember(Prefs.hideStreams) { Catalog.visible.take(40) }
+        val rooms = remember(Prefs.hideStreams) { roomsOf() }
         fun meta(a: App) = status(ctx, a)
         @Suppress("UNUSED_VARIABLE") val watch = tick
         val rowsState = rememberLazyListState()
@@ -521,7 +521,7 @@ private fun roomsOf(): List<Pair<String, List<App>>> =
 
 @Composable
 private fun Categories(last: String?, openRoom: (String) -> Unit, handoff: FocusHandoff) {
-    val rooms = remember { roomsOf() }
+    val rooms = remember(Prefs.hideStreams) { roomsOf() }
     val target = last?.takeIf { l -> rooms.any { it.first == l } } ?: rooms.first().first
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
@@ -582,7 +582,7 @@ private fun RoomPage(
 ) {
     val ctx = LocalContext.current
     val tick = Device.tick
-    val apps = remember(room, recent) {
+    val apps = remember(room, recent, Prefs.hideStreams) {
         Catalog.visible.filter { it.room == room }.let { list -> if (recent) list.sortedByDescending { it.date } else list }
     }
     val target = last?.takeIf { l -> apps.any { it.id == l } } ?: apps.firstOrNull()?.id
@@ -802,7 +802,7 @@ private fun SearchScreen(query: String, onQuery: (String) -> Unit, openApp: (Str
             if (query.isNotEmpty()) Chip("Clear", false) { onQuery("") }
         }
         val q = query.trim().lowercase()
-        val results = remember(q, Catalog.apps) { search(q) }
+        val results = remember(q, Catalog.apps, Prefs.hideStreams) { search(q) }
         val shown = if (q.isEmpty()) Catalog.visible.take(20).map { it to true } else results
         T(
             when {
@@ -840,7 +840,7 @@ private fun Chip(text: String, selected: Boolean, onClick: () -> Unit) {
 private fun search(q: String): List<Pair<App, Boolean>> {
     if (q.isEmpty()) return emptyList()
     val words = q.split(Regex("\\s+")).filter { it.isNotEmpty() }
-    return Catalog.apps.mapNotNull { a ->
+    return Catalog.apps.filter { Catalog.shown(it) }.mapNotNull { a ->
         val hay = "${a.name} ${a.note} ${a.desc} ${a.room} ${a.repo}".lowercase()
         val byName = a.name.lowercase().contains(q)
         val all = words.all { w -> hay.contains(w) || (w.endsWith("s") && hay.contains(w.dropLast(1))) }
@@ -1057,7 +1057,9 @@ private fun SettingsScreen(handoff: FocusHandoff) {
         Setting("Catalog", "${Fmt.count(Catalog.apps.size)} apps · ${Fmt.shortDate(Catalog.generated)}",
             "Every Android TV app on GitHub that publishes an APK and has had a release in the last 3 years. Checked on ${Fmt.date(Catalog.generated)}. This version carries the list inside the app."),
         Setting("Hide apps with fewer stars than", "${Catalog.MIN_STARS}",
-            "Keeps very new or little-used apps out of Discover. ${Fmt.count(Catalog.apps.size - Catalog.visible.size)} apps are hidden. Search still finds them by their exact name."),
+            "Keeps very new or little-used apps out of Discover. ${Fmt.count(Catalog.apps.count { it.stars < Catalog.MIN_STARS })} apps are hidden. Search still finds them by their exact name."),
+        Setting("Hide IPTV and stream apps", if (Prefs.hideStreams) "On · ${Fmt.count(Catalog.apps.count { it.streams })} hidden" else "Off",
+            "Hides IPTV players, live TV channel apps and debrid, torrent or Stremio streaming clients. They’re open source, but they play streams you bring yourself. Press OK to switch.") { Prefs.toggleStreams() },
         Setting("Download cache", "${Fmt.mb(cache)} · Clear",
             "Downloaded APK files are kept here so you can reinstall without downloading again. Press OK to clear them.") {
             Device.clearCache(ctx); cacheTick++
@@ -1086,7 +1088,7 @@ private fun SettingsScreen(handoff: FocusHandoff) {
             rows.forEachIndexed { i, s ->
                 Focusable(s.action, requester = if (i == 0) handoff.target else null, onFocus = { focusedIndex = i }) { f ->
                     Row(
-                        Modifier.fillMaxWidth().height(44.dp).lift(f, 1.02f, RoundedCornerShape(12.dp), rest = 0.dp, ring = 12.dp)
+                        Modifier.fillMaxWidth().height(40.dp).lift(f, 1.02f, RoundedCornerShape(12.dp), rest = 0.dp, ring = 12.dp)
                             .background(if (f) C.Mat else Color.Transparent, RoundedCornerShape(12.dp)).padding(horizontal = 15.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -1096,7 +1098,7 @@ private fun SettingsScreen(handoff: FocusHandoff) {
                         Ico(Icons.ChevRight, 13.dp, if (f) C.accent else C.Stone, Modifier.padding(start = 6.dp))
                     }
                 }
-                if (i == 4 || i == 6) Box(Modifier.padding(horizontal = 15.dp, vertical = 4.dp).fillMaxWidth().height(1.dp).background(C.Hair))
+                if (i == 4 || i == 7) Box(Modifier.padding(horizontal = 15.dp, vertical = 4.dp).fillMaxWidth().height(1.dp).background(C.Hair))
             }
         }
     }

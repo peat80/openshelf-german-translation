@@ -50,6 +50,7 @@ data class App(
     val stars: Int,
     val licence: String?,
     val archived: Boolean,
+    val streams: Boolean,
     val version: String,
     val date: String,
     val certSha256: String?,
@@ -89,7 +90,9 @@ object Catalog {
             minSdk = if (o.has("minSdk") && !o.isNull("minSdk")) o.getInt("minSdk") else null,
             room = o.getString("room"), note = o.getString("note"), desc = o.optString("desc"),
             maker = o.getString("maker"), stars = o.getInt("stars"), licence = o.str("licence"),
-            archived = o.optBoolean("archived"), version = o.getString("version"), date = o.getString("date"),
+            archived = o.optBoolean("archived"),
+            streams = STREAMS.containsMatchIn(listOf(o.getString("name"), o.getString("note"), o.optString("desc"), o.getString("repo"), o.getString("package"), o.optJSONArray("topics")?.toString().orEmpty()).joinToString(" ")),
+            version = o.getString("version"), date = o.getString("date"),
             certSha256 = o.str("certSha256"),
             art = AppArt(art.str("banner"), art.str("feature"), art.str("icon"), shots),
             apks = o.getJSONArray("apks").objects().map { Apk(it.getString("name"), it.getString("abi"), it.getString("url"), it.getLong("size")) },
@@ -99,7 +102,11 @@ object Catalog {
 
     const val MIN_STARS = 10
 
-    val visible: List<App> get() = apps.filter { it.stars >= MIN_STARS }
+    private val STREAMS = Regex("iptv|\\bm3u8?\\b|xtream|debrid|torbox|torrserv|stremio|cloudstream|live ?tv\\b|电视直播|直播源|tvbox", RegexOption.IGNORE_CASE)
+
+    fun shown(a: App) = !(Prefs.hideStreams && a.streams)
+
+    val visible: List<App> get() = apps.filter { it.stars >= MIN_STARS && shown(it) }
 
     fun byId(id: String): App? = apps.firstOrNull { it.id == id }
 }
@@ -248,6 +255,14 @@ object Prefs {
     var accent by mutableIntStateOf(0)
         private set
 
+    var hideStreams by mutableStateOf(true)
+        private set
+
+    fun toggleStreams() {
+        hideStreams = !hideStreams
+        file.edit().putBoolean("hideStreams", hideStreams).apply()
+    }
+
     val themes = listOf("Match TV", "Light", "Dark")
     var theme by mutableIntStateOf(0)
         private set
@@ -259,6 +274,7 @@ object Prefs {
         file = ctx.getSharedPreferences("prefs", Context.MODE_PRIVATE)
         accent = file.getInt("accent", 0).coerceIn(accents.indices)
         theme = file.getInt("theme", 0).coerceIn(themes.indices)
+        hideStreams = file.getBoolean("hideStreams", true)
     }
 
     fun nextTheme() {

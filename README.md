@@ -17,6 +17,7 @@ Google Play on TV only carries apps that publish there. Plenty of good TV apps o
 - Checks the signing key before installing an update, and holds the update if the key changed
 - My Apps shows what's installed, with updates for apps in the catalog
 - Light and dark themes, and a choice of accent colours
+- IPTV players and debrid or Stremio streaming clients are hidden by default, with a switch in Settings to show them
 
 ## Screenshots
 
