@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.core.content.FileProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -65,7 +66,11 @@ object Installer {
                     return@launch
                 }
                 jobs[app.id] = Job.Installing
-                withContext(Dispatchers.IO) { commit(appCtx, app, file) }
+                try {
+                    withContext(Dispatchers.IO) { commit(appCtx, app, file) }
+                } catch (e: Exception) {
+                    if (!handOff(appCtx, app.id, file)) throw e
+                }
             } catch (e: Exception) {
                 jobs[app.id] = Job.Failed(e.message ?: "Something went wrong. Try again.")
             }
@@ -135,11 +140,20 @@ object Installer {
                 file.inputStream().use { it.copyTo(out) }
                 session.fsync(out)
             }
-            val intent = Intent(ctx, InstallResultReceiver::class.java).putExtra("appId", app.id)
+            val intent = Intent(ctx, InstallResultReceiver::class.java).putExtra("appId", app.id).putExtra("apk", file.path)
             val flags = PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
             session.commit(PendingIntent.getBroadcast(ctx, sessionId, intent, flags).intentSender)
         }
     }
+
+    fun handOff(ctx: Context, id: String, file: File): Boolean = runCatching {
+        val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.apks", file)
+        val intent = Intent(Intent.ACTION_VIEW)
+            .setDataAndType(uri, "application/vnd.android.package-archive")
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        ctx.startActivity(intent)
+        jobs.remove(id)
+    }.isSuccess
 
     fun finished(id: String) {
         jobs.remove(id)
@@ -166,7 +180,13 @@ class InstallResultReceiver : BroadcastReceiver() {
                 } else {
                     @Suppress("DEPRECATION") intent.getParcelableExtra(Intent.EXTRA_INTENT)
                 }
-                confirm?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)?.let { ctx.startActivity(it) }
+                val shown = confirm != null && runCatching { ctx.startActivity(confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess
+                if (!shown) {
+                    val apk = intent.getStringExtra("apk")?.let(::File)
+                    if (apk == null || !Installer.handOff(ctx, id, apk)) {
+                        Installer.failed(id, "This TV blocked Android's install screen. Try again, or install the APK from a computer with adb.")
+                    }
+                }
             }
             PackageInstaller.STATUS_SUCCESS -> Installer.finished(id)
             PackageInstaller.STATUS_FAILURE_ABORTED -> Installer.cancelled(id)
