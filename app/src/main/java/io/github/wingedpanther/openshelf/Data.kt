@@ -59,6 +59,8 @@ data class App(
     val art: AppArt,
     val apks: List<Apk>,
     val releases: List<Release>,
+    val forkOf: String?,
+    val parentStars: Int,
 ) {
     val runsHere: Boolean get() = (minSdk ?: 0) <= Build.VERSION.SDK_INT
 }
@@ -99,6 +101,7 @@ object Catalog {
             art = AppArt(art.str("banner"), art.str("feature"), art.str("icon"), shots),
             apks = o.getJSONArray("apks").objects().map { Apk(it.getString("name"), it.getString("abi"), it.getString("url"), it.getLong("size")) },
             releases = o.getJSONArray("releases").objects().map { Release(it.getString("tag"), it.getString("date")) },
+            forkOf = o.str("forkOf"), parentStars = o.optInt("parentStars"),
         )
     }
 
@@ -108,7 +111,14 @@ object Catalog {
 
     fun shown(a: App) = !(Prefs.hideStreams && a.streams)
 
-    val visible: List<App> get() = apps.filter { it.stars >= MIN_STARS && shown(it) }
+    val visible: List<App> get() = apps.filter { (it.stars >= MIN_STARS || it.parentStars >= MIN_STARS) && shown(it) }
+
+    fun forksOf(a: App): List<App> = apps.filter { it.forkOf == a.repo }
+
+    fun byRepo(repo: String): App? = apps.firstOrNull { it.repo == repo }
+
+    fun sibling(a: App, i: Installed): App? =
+        apps.firstOrNull { it.pkg == a.pkg && it.id != a.id && it.certSha256 != null && it.certSha256 in i.certs }
 
     fun byId(id: String): App? = apps.firstOrNull { it.id == id }
 }
@@ -237,6 +247,10 @@ object Device {
     }
 
     fun installed(ctx: Context, pkg: String): Installed? = all(ctx)[pkg]
+
+    fun installedAs(ctx: Context, a: App): Installed? = installed(ctx, a.pkg)?.takeIf { i ->
+        a.certSha256 == null || i.certs.isEmpty() || a.certSha256 in i.certs || Catalog.sibling(a, i) == null
+    }
 
     fun archiveCerts(ctx: Context, file: File): Set<String> {
         val pm = ctx.packageManager

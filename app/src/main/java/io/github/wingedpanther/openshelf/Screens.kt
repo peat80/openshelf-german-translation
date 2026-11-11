@@ -160,7 +160,7 @@ fun OpenShelf() {
             val app = page?.let { Catalog.byId(it) }
             val r = room
             if (app != null) {
-                AppPage(app, handoff)
+                AppPage(app, openApp, handoff)
             } else if (r != null) {
                 RoomPage(r, roomGrid, roomRecent, { roomRecent = it }, lastInRoom, { lastInRoom = it }, openApp, handoff)
             } else when (tab) {
@@ -507,7 +507,7 @@ private fun RoomCard(room: String, n: Int, onClick: () -> Unit) {
 }
 
 private fun status(ctx: Context, a: App): String {
-    val inst = Device.installed(ctx, a.pkg)
+    val inst = Device.installedAs(ctx, a)
     return when {
         inst != null && inst.versionCode < a.versionCode -> str(R.string.status_update_ready)
         inst != null -> str(R.string.status_installed)
@@ -620,10 +620,11 @@ private fun RoomPage(
 }
 
 @Composable
-private fun AppPage(app: App, handoff: FocusHandoff) {
+private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) {
     val ctx = LocalContext.current
     val tick = Device.tick
-    val installed = remember(app.pkg, tick) { Device.installed(ctx, app.pkg) }
+    val installed = remember(app.id, tick) { Device.installedAs(ctx, app) }
+    val other = remember(app.id, tick) { Device.installed(ctx, app.pkg)?.let { Catalog.sibling(app, it) } }
     val gallery = remember(app.id) { app.art.gallery }
     var shot by remember(app.id) { mutableStateOf(gallery.firstOrNull()) }
     val apk = pickApk(app)
@@ -671,7 +672,7 @@ private fun AppPage(app: App, handoff: FocusHandoff) {
                         T(app.name, 24.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
                         if (installed != null) { Spacer(Modifier.width(8.dp)); Dot() }
                     }
-                    T(str(R.string.by_maker, app.maker), 12.5.sp, color = C.Stone)
+                    T(if (app.forkOf != null) str(R.string.by_maker_fork, app.maker, Catalog.byRepo(app.forkOf)?.name ?: app.forkOf.substringAfter('/')) else str(R.string.by_maker, app.maker), 12.5.sp, color = C.Stone, maxLines = 1)
                 }
             }
             T(app.note, 15.5.sp, Modifier.padding(top = 12.dp), color = C.Ink2, maxLines = 2)
@@ -682,6 +683,8 @@ private fun AppPage(app: App, handoff: FocusHandoff) {
             }
             JobNote(app, Modifier.padding(top = 6.dp))
             StorageLine(app, installed)
+            val fork = remember(app.id) { Catalog.forksOf(app).maxByOrNull { it.date } }
+            if (fork != null) ForkLine(fork) { openApp(fork.id) }
             Box(Modifier.padding(top = 12.dp).fillMaxWidth().height(1.dp).background(C.Hair))
             Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(11.dp)) {
                 Row {
@@ -695,16 +698,28 @@ private fun AppPage(app: App, handoff: FocusHandoff) {
                 val cert = app.certSha256
                 val mismatch = installed != null && cert != null && installed.certs.isNotEmpty() && cert !in installed.certs
                 val sig = when {
+                    other != null -> str(R.string.sig_sibling, other.repo)
                     cert == null -> str(R.string.sig_unrecorded)
                     installed == null -> str(R.string.sig_checked)
                     mismatch -> str(R.string.sig_mismatch)
                     else -> str(R.string.sig_matches)
                 }
-                Prov(if (mismatch) Icons.ShieldAlert else Icons.Shield, str(R.string.prov_signing), sig)
+                Prov(if (mismatch || other != null) Icons.ShieldAlert else Icons.Shield, str(R.string.prov_signing), sig)
                 val picked = if (apk.abi in listOf("any", "universal")) str(R.string.file_picked_any) else str(R.string.file_picked_abi, abiLabel(apk.abi))
                 Prov(Icons.Chip, picked, apk.name)
             }
         }
+    }
+}
+
+@Composable
+private fun ForkLine(fork: App, onClick: () -> Unit) {
+    Row(Modifier.padding(top = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Ico(Icons.Up, 15.dp, C.accent)
+        Spacer(Modifier.width(7.dp))
+        T(str(R.string.fork_line, fork.maker, Fmt.monthYear(fork.date)), 12.sp, Modifier.weight(1f), color = C.Ink2, weight = FontWeight.Medium, maxLines = 2)
+        Spacer(Modifier.width(10.dp))
+        Pill(str(R.string.view_fork), onClick, solid = false, icon = Icons.ChevRight)
     }
 }
 
@@ -856,7 +871,7 @@ private fun search(q: String): List<Pair<App, Boolean>> {
 private fun ResultCard(a: App, q: String, byName: Boolean, onClick: () -> Unit) {
     val ctx = LocalContext.current
     val tick = Device.tick
-    val installed = remember(a.pkg, tick) { Device.installed(ctx, a.pkg) != null }
+    val installed = remember(a.id, tick) { Device.installedAs(ctx, a) != null }
     Focusable(onClick) { f ->
         Column(Modifier.width(224.dp)) {
             Box(Modifier.size(224.dp, 126.dp).lift(f, ring = 12.dp, shape = RoundedCornerShape(12.dp)).clip(RoundedCornerShape(12.dp))) {
@@ -905,7 +920,11 @@ private fun otherApps(ctx: Context, exclude: Set<String>): List<LocalApp> {
 private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: FocusHandoff) {
     val ctx = LocalContext.current
     val tick = Device.tick
-    val mine = remember(tick) { Catalog.apps.mapNotNull { a -> Device.installed(ctx, a.pkg)?.let { a to it } } }
+    val mine = remember(tick) {
+        Catalog.apps.groupBy { it.pkg }.mapNotNull { (pkg, list) ->
+            Device.installed(ctx, pkg)?.let { i -> (list.firstOrNull { it.certSha256 != null && it.certSha256 in i.certs } ?: list.firstOrNull { it.forkOf == null } ?: list.first()) to i }
+        }
+    }
     var others by remember { mutableStateOf<List<LocalApp>?>(null) }
     LaunchedEffect(tick) { others = withContext(Dispatchers.IO) { otherApps(ctx, mine.map { it.first.pkg }.toSet()) } }
     fun state(a: App, i: Installed): State = when {

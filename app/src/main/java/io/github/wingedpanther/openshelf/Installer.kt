@@ -123,6 +123,7 @@ object Installer {
         }
         val installed = Device.installed(ctx, app.pkg)
         if (installed != null && installed.certs.isNotEmpty() && fileCerts.isNotEmpty() && installed.certs.intersect(fileCerts).isEmpty()) {
+            Catalog.sibling(app, installed)?.let { return ctx.getString(R.string.held_sibling, app.name, it.repo) }
             return ctx.getString(R.string.held_other_build, app.name)
         }
         return null

@@ -277,7 +277,7 @@ fun uninstall(ctx: Context, pkg: String) {
 fun InstallButton(app: App, modifier: Modifier = Modifier, solid: Boolean = true, requester: FocusRequester? = null) {
     val ctx = LocalContext.current
     val tick = Device.tick
-    val installed = remember(app.pkg, tick) { Device.installed(ctx, app.pkg) }
+    val installed = remember(app.id, tick) { Device.installedAs(ctx, app) }
     val size = Fmt.mb(pickApk(app).size)
     val fg = if (solid) C.OnInk else C.Ink
     val track = if (solid) C.OnInk.copy(alpha = 0.25f) else C.Hair2

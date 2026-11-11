@@ -61,9 +61,13 @@
     <string name="err_storage">Not enough space on this TV.</string>
     <string name="err_incompatible">This build doesn\'t run on this TV.</string>
     <string name="held_key_changed">This file is signed with a different key than the one Open Shelf recorded for %1$s. Held for review.</string>
+    <string name="held_sibling">The %1$s on this TV is the %2$s build. Uninstall it first, then install this one.</string>
     <string name="held_other_build">The %1$s on this TV came from someone else\'s build. Android won\'t update it with this file.</string>
 
     <string name="by_maker">by %1$s</string>
+    <string name="by_maker_fork">by %1$s · fork of %2$s</string>
+    <string name="fork_line">Maintained fork by %1$s, updated %2$s</string>
+    <string name="view_fork">View fork</string>
     <string name="fact_version">Version</string>
     <string name="fact_licence">Licence</string>
     <string name="fact_stars">Stars</string>
@@ -94,6 +98,7 @@
     <string name="sig_unrecorded">Not recorded yet. Android still checks updates against your installed copy.</string>
     <string name="sig_checked">Checked against the developer’s key before install</string>
     <string name="sig_mismatch">Different from the developer’s key. Updates are held.</string>
+    <string name="sig_sibling">This TV has the %1$s build. Uninstall it to switch.</string>
     <string name="sig_matches">Matches the developer’s key</string>
     <string name="file_picked_any">File picked for every TV</string>
     <string name="file_picked_abi">File picked for this TV (%1$s)</string>

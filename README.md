@@ -18,6 +18,7 @@ Google Play on TV only carries apps that publish there. Plenty of good TV apps o
 - My Apps shows what's installed, with updates for apps in the catalog
 - Light and dark themes, and a choice of accent colours
 - IPTV players and debrid or Stremio streaming clients are hidden by default, with a switch in Settings to show them
+- When an app looks abandoned, its page points to a maintained fork if one ships a newer TV build
 
 ## Screenshots
 
@@ -42,7 +43,7 @@ You need an Android TV, Google TV, Fire TV or other Android box running Android 
 
 The app list is built from public GitHub data and ships inside the APK. An app is included when:
 
-- the repository isn't a fork
+- the repository isn't a fork, unless the original is archived or hasn't had a release in a year, and the fork has at least 10 stars and ships a newer TV build
 - its latest release has an APK, published in the last 3 years
 - that APK's manifest has the Android TV launcher entry
 
