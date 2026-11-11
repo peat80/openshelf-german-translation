@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_discover">Discover</string>
+    <string name="tab_categories">Categories</string>
+    <string name="tab_search">Search</string>
+    <string name="tab_mine">My Apps</string>
+    <string name="tab_settings">Settings</string>
+
+    <string name="fmt_date">d MMM yyyy</string>
+    <string name="fmt_short_date">d MMM</string>
+    <string name="fmt_month_year">MMM yyyy</string>
+
+    <string name="abi_arm64">ARM 64-bit</string>
+    <string name="abi_arm32">ARM 32-bit</string>
+    <string name="abi_x86_64">x86 64-bit</string>
+
+    <string name="accent_sage">Sage</string>
+    <string name="accent_red">Gallery red</string>
+    <string name="accent_ochre">Ochre</string>
+    <string name="accent_plum">Plum</string>
+    <string name="accent_none">None</string>
+
+    <string name="theme_match">Match TV</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+
+    <string name="room_launchers">Launchers</string>
+    <string name="room_screensavers">Screensavers</string>
+    <string name="room_vpn">VPN &amp; network</string>
+    <string name="room_streaming">Streaming</string>
+    <string name="room_stores">App stores</string>
+    <string name="room_games">Games</string>
+    <string name="room_music">Music</string>
+    <string name="room_video">Video</string>
+    <string name="room_home">Smart home</string>
+    <string name="room_photos">Photos</string>
+    <string name="room_reading">Reading</string>
+    <string name="room_learning">Learning</string>
+    <string name="room_chat">Chat &amp; social</string>
+    <string name="room_ai">AI</string>
+    <string name="room_browsers">Browsers</string>
+    <string name="room_files">Files &amp; downloads</string>
+    <string name="room_tools">Tools</string>
+    <string name="room_other">Other</string>
+
+    <string name="needs_android">Needs %1$s</string>
+    <string name="job_downloading">Downloading %1$d%%</string>
+    <string name="job_checking">Checking signature</string>
+    <string name="job_installing">Installing</string>
+    <string name="action_install_size">Install · %1$s</string>
+    <string name="action_update_size">Update · %1$s</string>
+    <string name="action_update">Update</string>
+    <string name="action_open">Open</string>
+
+    <string name="err_allow_install">Allow Open Shelf to install apps, then press Install again.</string>
+    <string name="err_generic">Something went wrong. Try again.</string>
+    <string name="err_download_http">Download failed (HTTP %1$d). Try again.</string>
+    <string name="err_save">Couldn\'t save the download. Free some space and try again.</string>
+    <string name="err_blocked">This TV blocked Android\'s install screen. Try again, or install the APK from a computer with adb.</string>
+    <string name="err_conflict">The installed copy was signed by someone else. Uninstall it first, then install from here.</string>
+    <string name="err_storage">Not enough space on this TV.</string>
+    <string name="err_incompatible">This build doesn\'t run on this TV.</string>
+    <string name="held_key_changed">This file is signed with a different key than the one Open Shelf recorded for %1$s. Held for review.</string>
+    <string name="held_other_build">The %1$s on this TV came from someone else\'s build. Android won\'t update it with this file.</string>
+
+    <string name="by_maker">by %1$s</string>
+    <string name="fact_version">Version</string>
+    <string name="fact_licence">Licence</string>
+    <string name="fact_stars">Stars</string>
+    <string name="licence_unknown">See repository</string>
+    <string name="view_app">View app</string>
+    <string name="row_tv">Built for TV</string>
+    <string name="row_tv_sub">apps that ship TV artwork</string>
+    <string name="row_recent">Recently updated</string>
+    <string name="row_recent_sub">new releases on GitHub</string>
+    <string name="row_starred">Most starred</string>
+    <string name="row_categories">Categories</string>
+    <string name="row_categories_sub">browse by what apps do</string>
+    <plurals name="apps">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+    <string name="categories_summary">%1$d categories, %2$s apps</string>
+    <string name="status_update_ready">Update ready</string>
+    <string name="status_installed">Installed</string>
+
+    <string name="releases">Releases</string>
+    <string name="latest_month">Latest, %1$s</string>
+    <string name="archived_note">Archived by its developer. Don\'t expect more updates.</string>
+    <string name="uninstall">Uninstall</string>
+    <string name="prov_released">Released</string>
+    <string name="prov_download">Download</string>
+    <string name="prov_signing">Signing key</string>
+    <string name="sig_unrecorded">Not recorded yet. Android still checks updates against your installed copy.</string>
+    <string name="sig_checked">Checked against the developer’s key before install</string>
+    <string name="sig_mismatch">Different from the developer’s key. Updates are held.</string>
+    <string name="sig_matches">Matches the developer’s key</string>
+    <string name="file_picked_any">File picked for every TV</string>
+    <string name="file_picked_abi">File picked for this TV (%1$s)</string>
+    <string name="installed_version">Installed version %1$s</string>
+    <string name="needs_space">Needs %1$s. %2$s free on this TV.</string>
+
+    <string name="search_hint_editing">Type an app name or what it does</string>
+    <string name="search_hint">Search apps</string>
+    <string name="search_press_ok">Press OK to type</string>
+    <string name="search_ok_edit">OK to edit</string>
+    <string name="search_try">Try</string>
+    <string name="search_clear">Clear</string>
+    <string name="search_none">No apps match “%1$s”</string>
+    <plurals name="search_results">
+        <item quantity="one">%1$d app for “%2$s”</item>
+        <item quantity="other">%1$d apps for “%2$s”</item>
+    </plurals>
+    <string name="search_tip">Try a shorter word, or what the app does, like “video player”.</string>
+    <string name="search_matches">Matches:</string>
+
+    <string name="mine_title">My apps</string>
+    <plurals name="updates_ready">
+        <item quantity="one">%1$d update ready</item>
+        <item quantity="other">%1$d updates ready</item>
+    </plurals>
+    <string name="held_count">%1$d held for review</string>
+    <string name="from_shelf_count">%1$d from Open Shelf</string>
+    <plurals name="other_apps">
+        <item quantity="one">%1$d other app on this TV</item>
+        <item quantity="other">%1$d other apps on this TV</item>
+    </plurals>
+    <string name="update_all">Update all</string>
+    <string name="section_from_shelf">From Open Shelf</string>
+    <string name="mine_empty">Apps you install from Open Shelf appear here, with updates.</string>
+    <string name="find_app">Find an app</string>
+    <string name="held_sub">%1$s · signed with a different key</string>
+    <string name="update_held">Update held</string>
+    <string name="review">Review</string>
+    <string name="up_to_date">Up to date</string>
+    <string name="details">Details</string>
+    <string name="section_other">Other apps on this TV</string>
+    <string name="not_in_list">not in the Open Shelf list</string>
+
+    <string name="set_accent">Accent colour</string>
+    <string name="set_accent_help">Colours the focus ring, the focused button and the dot that marks installed apps. Press OK to try the next one.</string>
+    <string name="set_appearance">Appearance</string>
+    <string name="set_appearance_help">Light hangs the shelf on a white wall, Dark on a charcoal one for evenings. Match TV follows the TV’s own dark setting. Press OK to switch.</string>
+    <string name="set_install">Install apps from Open Shelf</string>
+    <string name="allowed">Allowed</string>
+    <string name="not_allowed">Not allowed yet</string>
+    <string name="set_install_help">Android asks you to allow this once. After that, Open Shelf can install and update apps, and each install still asks you to confirm.</string>
+    <string name="set_apk">APK type</string>
+    <string name="apk_auto">Automatic · %1$s</string>
+    <string name="set_apk_help">Many apps publish a different file for each kind of chip. Open Shelf picks the one that fits this TV. Supported here: %1$s.</string>
+    <string name="set_key">If an app’s signing key changes</string>
+    <string name="set_key_value">Hold the update</string>
+    <string name="set_key_help">Every release is signed by its developer. If a new file is signed by someone else, Open Shelf keeps your current version and doesn’t install it.</string>
+    <string name="set_catalog">Catalog</string>
+    <string name="catalog_value">%1$s apps · %2$s</string>
+    <string name="catalog_help">Every Android TV app on GitHub that publishes an APK and has had a release in the last 3 years. Checked on %1$s. This version carries the list inside the app.</string>
+    <string name="set_stars">Hide apps with fewer stars than</string>
+    <string name="set_stars_help">Keeps very new or little-used apps out of Discover. %1$s apps are hidden. Search still finds them by their exact name.</string>
+    <string name="set_streams">Hide IPTV and stream apps</string>
+    <string name="streams_on">On · %1$s hidden</string>
+    <string name="streams_off">Off</string>
+    <string name="set_streams_help">Hides IPTV players, live TV channel apps and debrid, torrent or Stremio streaming clients. They’re open source, but they play streams you bring yourself. Press OK to switch.</string>
+    <string name="set_cache">Download cache</string>
+    <string name="cache_value">%1$s · Clear</string>
+    <string name="set_cache_help">Downloaded APK files are kept here so you can reinstall without downloading again. Press OK to clear them.</string>
+    <string name="set_about">About</string>
+    <string name="about_value">Open Shelf %1$s</string>
+    <string name="about_help">Open Shelf is open source under GPL-3.0, at github.com/wingedpanther/openshelf. App names, art and releases come from each project’s GitHub repository.</string>
+    <string name="settings_footer">Version %1$s · %2$s apps</string>
+</resources>

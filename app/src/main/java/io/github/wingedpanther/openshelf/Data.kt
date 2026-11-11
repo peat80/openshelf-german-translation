@@ -24,6 +24,8 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
 import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 data class Apk(val name: String, val abi: String, val url: String, val size: Long)
@@ -116,10 +118,29 @@ fun pickApk(app: App): Apk {
     return app.apks.firstOrNull { it.abi == "universal" } ?: app.apks.firstOrNull { it.abi == "any" } ?: app.apks.first()
 }
 
+object L {
+    lateinit var res: android.content.res.Resources
+    fun init(ctx: Context) { res = ctx.applicationContext.resources }
+}
+
+fun str(id: Int, vararg args: Any): String = L.res.getString(id, *args)
+fun plural(id: Int, n: Int, vararg args: Any): String = L.res.getQuantityString(id, n, *args)
+
+private val roomNames = mapOf(
+    "Launchers" to R.string.room_launchers, "Screensavers" to R.string.room_screensavers, "VPN & network" to R.string.room_vpn,
+    "Streaming" to R.string.room_streaming, "App stores" to R.string.room_stores, "Games" to R.string.room_games,
+    "Music" to R.string.room_music, "Video" to R.string.room_video, "Smart home" to R.string.room_home,
+    "Photos" to R.string.room_photos, "Reading" to R.string.room_reading, "Learning" to R.string.room_learning,
+    "Chat & social" to R.string.room_chat, "AI" to R.string.room_ai, "Browsers" to R.string.room_browsers,
+    "Files & downloads" to R.string.room_files, "Tools" to R.string.room_tools, "Other" to R.string.room_other,
+)
+
+fun roomName(room: String) = roomNames[room]?.let { str(it) } ?: room
+
 fun abiLabel(abi: String): String = when (abi) {
-    "arm64-v8a" -> "ARM 64-bit"
-    "armeabi-v7a" -> "ARM 32-bit"
-    "x86_64" -> "x86 64-bit"
+    "arm64-v8a" -> str(R.string.abi_arm64)
+    "armeabi-v7a" -> str(R.string.abi_arm32)
+    "x86_64" -> str(R.string.abi_x86_64)
     "x86" -> "x86"
     else -> abi
 }
@@ -132,15 +153,15 @@ private val androidNames = mapOf(
 fun androidName(sdk: Int) = "Android ${androidNames[sdk] ?: "API $sdk"}"
 
 object Fmt {
-    private val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-    private fun parts(d: String) = d.split("-").map { it.toInt() }
-    fun date(d: String) = parts(d).let { (y, m, dd) -> "$dd ${months[m - 1]} $y" }
-    fun shortDate(d: String) = parts(d).let { (_, m, dd) -> "$dd ${months[m - 1]}" }
-    fun monthYear(d: String) = parts(d).let { (y, m, _) -> "${months[m - 1]} $y" }
-    fun mb(bytes: Long): String = String.format(Locale.UK, "%.1f MB", bytes / 1_000_000.0)
-    fun gb(bytes: Long): String = String.format(Locale.UK, "%.1f GB", bytes / 1_000_000_000.0)
-    fun count(n: Int): String = NumberFormat.getIntegerInstance(Locale.UK).format(n)
-    fun stars(n: Int): String = if (n >= 1000) String.format(Locale.UK, "%.1fk", n / 1000.0).replace(".0k", "k") else "$n"
+    private fun fmt(pattern: Int, d: String) =
+        LocalDate.parse(d.take(10)).format(DateTimeFormatter.ofPattern(str(pattern), Locale.getDefault()))
+    fun date(d: String) = fmt(R.string.fmt_date, d)
+    fun shortDate(d: String) = fmt(R.string.fmt_short_date, d)
+    fun monthYear(d: String) = fmt(R.string.fmt_month_year, d)
+    fun mb(bytes: Long): String = String.format(Locale.getDefault(), "%.1f MB", bytes / 1_000_000.0)
+    fun gb(bytes: Long): String = String.format(Locale.getDefault(), "%.1f GB", bytes / 1_000_000_000.0)
+    fun count(n: Int): String = NumberFormat.getIntegerInstance(Locale.getDefault()).format(n)
+    fun stars(n: Int): String = if (n >= 1000) String.format(Locale.getDefault(), "%.1fk", n / 1000.0).replace(Regex("[.,]0k$"), "k") else "$n"
 }
 
 object Images {
@@ -246,11 +267,11 @@ object Device {
 
 object Prefs {
     val accents = listOf(
-        Triple("Sage", 0xFF3F6F55, 0xFF7DB592),
-        Triple("Gallery red", 0xFFC23B2E, 0xFFE8735F),
-        Triple("Ochre", 0xFF9A6412, 0xFFE0A84A),
-        Triple("Plum", 0xFF5B4B8A, 0xFFA597E0),
-        Triple("None", 0xFF8E8E93, 0xFFAEAEB2),
+        Triple(R.string.accent_sage, 0xFF3F6F55, 0xFF7DB592),
+        Triple(R.string.accent_red, 0xFFC23B2E, 0xFFE8735F),
+        Triple(R.string.accent_ochre, 0xFF9A6412, 0xFFE0A84A),
+        Triple(R.string.accent_plum, 0xFF5B4B8A, 0xFFA597E0),
+        Triple(R.string.accent_none, 0xFF8E8E93, 0xFFAEAEB2),
     )
     var accent by mutableIntStateOf(0)
         private set
@@ -263,7 +284,7 @@ object Prefs {
         file.edit().putBoolean("hideStreams", hideStreams).apply()
     }
 
-    val themes = listOf("Match TV", "Light", "Dark")
+    val themes = listOf(R.string.theme_match, R.string.theme_light, R.string.theme_dark)
     var theme by mutableIntStateOf(0)
         private set
     var systemDark by mutableStateOf(false)

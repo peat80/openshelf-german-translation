@@ -49,7 +49,7 @@ object Installer {
         val appCtx = ctx.applicationContext
         if (busy(app.id)) return
         if (!canInstall(appCtx)) {
-            jobs[app.id] = Job.Failed("Allow Open Shelf to install apps, then press Install again.")
+            jobs[app.id] = Job.Failed(appCtx.getString(R.string.err_allow_install))
             openInstallPermission(ctx)
             return
         }
@@ -58,7 +58,7 @@ object Installer {
         jobs[app.id] = Job.Downloading(0, apk.size)
         scope.launch {
             try {
-                download(apk, file) { done, total -> jobs[app.id] = Job.Downloading(done, total) }
+                download(appCtx, apk, file) { done, total -> jobs[app.id] = Job.Downloading(done, total) }
                 jobs[app.id] = Job.Checking
                 val held = withContext(Dispatchers.IO) { checkSignature(appCtx, app, file) }
                 if (held != null) {
@@ -72,12 +72,12 @@ object Installer {
                     if (!handOff(appCtx, app.id, file)) throw e
                 }
             } catch (e: Exception) {
-                jobs[app.id] = Job.Failed(e.message ?: "Something went wrong. Try again.")
+                jobs[app.id] = Job.Failed(e.message ?: appCtx.getString(R.string.err_generic))
             }
         }
     }
 
-    private suspend fun download(apk: Apk, file: File, progress: (Long, Long) -> Unit) {
+    private suspend fun download(ctx: Context, apk: Apk, file: File, progress: (Long, Long) -> Unit) {
         if (file.exists() && file.length() == apk.size) return
         withContext(Dispatchers.IO) {
             file.parentFile?.mkdirs()
@@ -88,7 +88,7 @@ object Installer {
                 setRequestProperty("User-Agent", "OpenShelf (+https://github.com/wingedpanther/openshelf)")
             }
             try {
-                if (conn.responseCode !in 200..299) throw IOException("Download failed (HTTP ${conn.responseCode}). Try again.")
+                if (conn.responseCode !in 200..299) throw IOException(ctx.getString(R.string.err_download_http, conn.responseCode))
                 val total = conn.contentLengthLong.takeIf { it > 0 } ?: apk.size
                 val part = File(file.path + ".part")
                 var done = 0L
@@ -109,7 +109,7 @@ object Installer {
                         }
                     }
                 }
-                if (!part.renameTo(file)) throw IOException("Couldn't save the download. Free some space and try again.")
+                if (!part.renameTo(file)) throw IOException(ctx.getString(R.string.err_save))
             } finally {
                 conn.disconnect()
             }
@@ -119,11 +119,11 @@ object Installer {
     private fun checkSignature(ctx: Context, app: App, file: File): String? {
         val fileCerts = Device.archiveCerts(ctx, file)
         if (fileCerts.isNotEmpty() && app.certSha256 != null && app.certSha256 !in fileCerts) {
-            return "This file is signed with a different key than the one Open Shelf recorded for ${app.name}. Held for review."
+            return ctx.getString(R.string.held_key_changed, app.name)
         }
         val installed = Device.installed(ctx, app.pkg)
         if (installed != null && installed.certs.isNotEmpty() && fileCerts.isNotEmpty() && installed.certs.intersect(fileCerts).isEmpty()) {
-            return "The ${app.name} on this TV came from someone else's build. Android won't update it with this file."
+            return ctx.getString(R.string.held_other_build, app.name)
         }
         return null
     }
@@ -184,17 +184,17 @@ class InstallResultReceiver : BroadcastReceiver() {
                 if (!shown) {
                     val apk = intent.getStringExtra("apk")?.let(::File)
                     if (apk == null || !Installer.handOff(ctx, id, apk)) {
-                        Installer.failed(id, "This TV blocked Android's install screen. Try again, or install the APK from a computer with adb.")
+                        Installer.failed(id, ctx.getString(R.string.err_blocked))
                     }
                 }
             }
             PackageInstaller.STATUS_SUCCESS -> Installer.finished(id)
             PackageInstaller.STATUS_FAILURE_ABORTED -> Installer.cancelled(id)
             PackageInstaller.STATUS_FAILURE_CONFLICT ->
-                Installer.failed(id, "The installed copy was signed by someone else. Uninstall it first, then install from here.")
-            PackageInstaller.STATUS_FAILURE_STORAGE -> Installer.failed(id, "Not enough space on this TV.")
-            PackageInstaller.STATUS_FAILURE_INCOMPATIBLE -> Installer.failed(id, "This build doesn't run on this TV.")
-            else -> Installer.failed(id, intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: "Install failed. Try again.")
+                Installer.failed(id, ctx.getString(R.string.err_conflict))
+            PackageInstaller.STATUS_FAILURE_STORAGE -> Installer.failed(id, ctx.getString(R.string.err_storage))
+            PackageInstaller.STATUS_FAILURE_INCOMPATIBLE -> Installer.failed(id, ctx.getString(R.string.err_incompatible))
+            else -> Installer.failed(id, intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: ctx.getString(R.string.err_generic))
         }
     }
 }

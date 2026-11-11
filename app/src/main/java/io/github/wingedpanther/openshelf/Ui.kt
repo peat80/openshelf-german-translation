@@ -289,16 +289,16 @@ fun InstallButton(app: App, modifier: Modifier = Modifier, solid: Boolean = true
         else -> null
     }
     if (installed == null && !app.runsHere) {
-        Pill("Needs ${androidName(app.minSdk ?: 0)}", {}, modifier, solid, null, requester)
+        Pill(str(R.string.needs_android, androidName(app.minSdk ?: 0)), {}, modifier, solid, null, requester)
         return
     }
     val (text, icon) = when {
-        job is Job.Downloading -> "Downloading ${(job.fraction * 100).toInt()}%" to null
-        job == Job.Checking -> "Checking signature" to null
-        job == Job.Installing -> "Installing" to null
-        installed != null && installed.versionCode < app.versionCode -> "Update · $size" to Icons.Download
-        installed != null -> "Open" to Icons.Play
-        else -> "Install · $size" to Icons.Download
+        job is Job.Downloading -> str(R.string.job_downloading, (job.fraction * 100).toInt()) to null
+        job == Job.Checking -> str(R.string.job_checking) to null
+        job == Job.Installing -> str(R.string.job_installing) to null
+        installed != null && installed.versionCode < app.versionCode -> str(R.string.action_update_size, size) to Icons.Download
+        installed != null -> str(R.string.action_open) to Icons.Play
+        else -> str(R.string.action_install_size, size) to Icons.Download
     }
     val onClick: () -> Unit = when {
         ring != null -> ({})

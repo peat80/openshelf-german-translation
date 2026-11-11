@@ -58,6 +58,14 @@ Needs JDK 17 or newer and the Android SDK. Point `local.properties` at the SDK (
 
 Release builds are signed with the debug key unless a `keystore.properties` file sits in the project root with `storeFile`, `storePassword`, `keyAlias` and `keyPassword`.
 
+## Translations
+
+All the app's text is in [app/src/main/res/values/strings.xml](app/src/main/res/values/strings.xml). To add a language, copy that file to `values-<code>/strings.xml` (for example `values-de` for German), translate the text and open a pull request.
+
+- Keep placeholders like `%1$s` and `%1$d` as they are. They're filled in with names and numbers.
+- `fmt_date`, `fmt_short_date` and `fmt_month_year` are date patterns. German would use `d. MMM yyyy`.
+- App descriptions come from each project's GitHub page and stay in English.
+
 ## Licence
 
 Open Shelf is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE).

@@ -105,7 +105,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-enum class Tab(val label: String) { Discover("Discover"), Categories("Categories"), Search("Search"), Mine("My Apps"), Settings("Settings") }
+enum class Tab(val label: Int) { Discover(R.string.tab_discover), Categories(R.string.tab_categories), Search(R.string.tab_search), Mine(R.string.tab_mine), Settings(R.string.tab_settings) }
 
 class FocusHandoff {
     val target = FocusRequester()
@@ -174,7 +174,7 @@ fun OpenShelf() {
         TopBar(
             tab = tab,
             deep = page != null || room != null,
-            backLabel = if (page != null) room ?: tab.label else tab.label,
+            backLabel = if (page != null) room?.let(::roomName) ?: str(tab.label) else str(tab.label),
             onBack = closePage,
             requesters = tabRequesters,
             onTab = { if (page == null) tab = it },
@@ -253,7 +253,7 @@ private fun TopBar(
                             .padding(horizontal = 15.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        T(t.label, 13.5.sp, color = if (f) C.OnAccent else if (selected) C.Ink else C.Stone, weight = FontWeight.Medium)
+                        T(str(t.label), 13.5.sp, color = if (f) C.OnAccent else if (selected) C.Ink else C.Stone, weight = FontWeight.Medium)
                     }
                 }
             }
@@ -289,22 +289,22 @@ private fun Discover(wallId: String, onWall: (String) -> Unit, openApp: (String)
                 AnimatedContent(wall, transitionSpec = { fadeIn(tween(320)) togetherWith fadeOut(tween(160)) }, label = "label") { a ->
                     Column {
                         T(a.name, 32.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
-                        T("by ${a.maker}", 13.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
+                        T(str(R.string.by_maker, a.maker), 13.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
                         AnimatedVisibility(!browsing, enter = expandVertically(tween(320)) + fadeIn(tween(320)), exit = shrinkVertically(tween(320)) + fadeOut(tween(160))) {
                             Column {
                                 T(a.note, 15.5.sp, Modifier.padding(top = 11.dp).width(330.dp), color = C.Ink2, maxLines = 2)
                                 Box(Modifier.padding(top = 15.dp).fillMaxWidth().height(1.dp).background(C.Hair))
                                 Column(Modifier.padding(top = 11.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                    Fact("Version", "${a.version}, ${Fmt.date(a.date)}")
-                                    Fact("Licence", a.licence ?: "See repository")
-                                    Fact("Stars", Fmt.count(a.stars))
+                                    Fact(str(R.string.fact_version), "${a.version}, ${Fmt.date(a.date)}")
+                                    Fact(str(R.string.fact_licence), a.licence ?: str(R.string.licence_unknown))
+                                    Fact(str(R.string.fact_stars), Fmt.count(a.stars))
                                 }
                             }
                         }
                     }
                 }
                 Row(Modifier.padding(top = 13.dp).offset(x = (-4).dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Pill("View app", { openApp(wall.id) }, solid = true, requester = handoff.target)
+                    Pill(str(R.string.view_app), { openApp(wall.id) }, solid = true, requester = handoff.target)
                     InstallButton(wall, solid = false)
                 }
             }
@@ -323,22 +323,22 @@ private fun Discover(wallId: String, onWall: (String) -> Unit, openApp: (String)
             state = rowsState,
         ) {
             item {
-                ShelfRow(0, rowsState, spec, "Built for TV", "apps that ship TV artwork", "Recently updated") {
+                ShelfRow(0, rowsState, spec, str(R.string.row_tv), str(R.string.row_tv_sub), str(R.string.row_recent)) {
                     items(tv, key = { it.id }) { a -> Tile(a, meta(a).ifEmpty { "★ ${Fmt.stars(a.stars)}" }, meta(a).isNotEmpty(), { onWall(a.id) }) { openApp(a.id) } }
                 }
             }
             item {
-                ShelfRow(1, rowsState, spec, "Recently updated", "new releases on GitHub", "Most starred") {
+                ShelfRow(1, rowsState, spec, str(R.string.row_recent), str(R.string.row_recent_sub), str(R.string.row_starred)) {
                     items(recent, key = { it.id }) { a -> Tile(a, meta(a).ifEmpty { Fmt.shortDate(a.date) }, meta(a).isNotEmpty(), { onWall(a.id) }) { openApp(a.id) } }
                 }
             }
             item {
-                ShelfRow(2, rowsState, spec, "Most starred", null, "Categories") {
+                ShelfRow(2, rowsState, spec, str(R.string.row_starred), null, str(R.string.row_categories)) {
                     items(starred, key = { it.id }) { a -> Tile(a, meta(a).ifEmpty { "★ ${Fmt.stars(a.stars)}" }, meta(a).isNotEmpty(), { onWall(a.id) }) { openApp(a.id) } }
                 }
             }
             item {
-                ShelfRow(3, rowsState, spec, "Categories", "browse by what apps do", null) {
+                ShelfRow(3, rowsState, spec, str(R.string.row_categories), str(R.string.row_categories_sub), null) {
                     items(rooms, key = { it.first }) { (room, apps) -> RoomCard(room, apps.size) { openRoom(room) } }
                 }
             }
@@ -427,7 +427,7 @@ private fun NameCard(app: App) {
                 Spacer(Modifier.height(if (big) 16.dp else 8.dp))
             }
             T(app.name, type, weight = FontWeight.SemiBold, tight = true, maxLines = 2)
-            if (big) T("by ${app.maker}", 13.5.sp, Modifier.padding(top = 6.dp), color = C.Stone, maxLines = 1)
+            if (big) T(str(R.string.by_maker, app.maker), 13.5.sp, Modifier.padding(top = 6.dp), color = C.Stone, maxLines = 1)
         }
     }
 }
@@ -500,8 +500,8 @@ private fun RoomCard(room: String, n: Int, onClick: () -> Unit) {
                 .padding(horizontal = 15.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.Bottom,
         ) {
-            T(room, 20.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
-            T(if (n == 1) "1 app" else "$n apps", 11.5.sp, color = C.Stone)
+            T(roomName(room), 20.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
+            T(plural(R.plurals.apps, n, n), 11.5.sp, color = C.Stone)
         }
     }
 }
@@ -509,8 +509,8 @@ private fun RoomCard(room: String, n: Int, onClick: () -> Unit) {
 private fun status(ctx: Context, a: App): String {
     val inst = Device.installed(ctx, a.pkg)
     return when {
-        inst != null && inst.versionCode < a.versionCode -> "Update ready"
-        inst != null -> "Installed"
+        inst != null && inst.versionCode < a.versionCode -> str(R.string.status_update_ready)
+        inst != null -> str(R.string.status_installed)
         else -> ""
     }
 }
@@ -531,7 +531,7 @@ private fun Categories(last: String?, openRoom: (String) -> Unit, handoff: Focus
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
-            T("${rooms.size} categories, ${Fmt.count(Catalog.visible.size)} apps", 13.5.sp, color = C.Stone, weight = FontWeight.Medium)
+            T(str(R.string.categories_summary, rooms.size, Fmt.count(Catalog.visible.size)), 13.5.sp, color = C.Stone, weight = FontWeight.Medium)
         }
         items(rooms, key = { it.first }) { (room, apps) ->
             CategoryCard(room, apps, if (room == target) handoff.target else null) { openRoom(room) }
@@ -553,8 +553,8 @@ private fun CategoryCard(room: String, apps: List<App>, requester: FocusRequeste
                 faces.forEach { a -> MiniArt(a) }
             }
             Spacer(Modifier.weight(1f))
-            T(room, 19.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
-            T(if (apps.size == 1) "1 app" else "${apps.size} apps", 11.5.sp, color = if (f) C.accent else C.Stone, weight = FontWeight.Medium)
+            T(roomName(room), 19.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
+            T(plural(R.plurals.apps, apps.size, apps.size), 11.5.sp, color = if (f) C.accent else C.Stone, weight = FontWeight.Medium)
         }
     }
 }
@@ -598,13 +598,13 @@ private fun RoomPage(
         item(span = { GridItemSpan(maxLineSpan) }) {
             Row(Modifier.padding(bottom = 6.dp), verticalAlignment = Alignment.Bottom) {
                 Column {
-                    T(room, 32.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
-                    T(if (apps.size == 1) "1 app" else "${apps.size} apps", 13.5.sp, Modifier.padding(top = 2.dp), color = C.Stone)
+                    T(roomName(room), 32.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
+                    T(plural(R.plurals.apps, apps.size, apps.size), 13.5.sp, Modifier.padding(top = 2.dp), color = C.Stone)
                 }
                 Spacer(Modifier.weight(1f))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Chip("Most starred", !recent) { onRecent(false) }
-                    Chip("Recently updated", recent) { onRecent(true) }
+                    Chip(str(R.string.row_starred), !recent) { onRecent(false) }
+                    Chip(str(R.string.row_recent), recent) { onRecent(true) }
                 }
             }
         }
@@ -646,7 +646,7 @@ private fun AppPage(app: App, handoff: FocusHandoff) {
                 }
             }
             if (app.releases.isNotEmpty()) {
-                T("Releases", 12.5.sp, Modifier.padding(top = if (gallery.size > 1) 24.dp else 28.dp), color = C.Stone, weight = FontWeight.Medium)
+                T(str(R.string.releases), 12.5.sp, Modifier.padding(top = if (gallery.size > 1) 24.dp else 28.dp), color = C.Stone, weight = FontWeight.Medium)
                 Row(Modifier.padding(top = 9.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     app.releases.take(4).forEachIndexed { i, r ->
                         Column(
@@ -655,7 +655,7 @@ private fun AppPage(app: App, handoff: FocusHandoff) {
                                 .padding(horizontal = 10.dp, vertical = 6.dp),
                         ) {
                             T(r.tag, 12.5.sp, weight = FontWeight.SemiBold, maxLines = 1)
-                            T(if (i == 0) "Latest, ${Fmt.monthYear(r.date)}" else Fmt.monthYear(r.date), 10.5.sp, color = C.Stone, maxLines = 1)
+                            T(if (i == 0) str(R.string.latest_month, Fmt.monthYear(r.date)) else Fmt.monthYear(r.date), 10.5.sp, color = C.Stone, maxLines = 1)
                         }
                     }
                 }
@@ -671,38 +671,38 @@ private fun AppPage(app: App, handoff: FocusHandoff) {
                         T(app.name, 24.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
                         if (installed != null) { Spacer(Modifier.width(8.dp)); Dot() }
                     }
-                    T("by ${app.maker}", 12.5.sp, color = C.Stone)
+                    T(str(R.string.by_maker, app.maker), 12.5.sp, color = C.Stone)
                 }
             }
             T(app.note, 15.5.sp, Modifier.padding(top = 12.dp), color = C.Ink2, maxLines = 2)
-            if (app.archived) T("Archived by its developer. Don't expect more updates.", 11.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
+            if (app.archived) T(str(R.string.archived_note), 11.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
             Row(Modifier.padding(top = 10.dp).offset(x = (-4).dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 InstallButton(app, requester = handoff.target)
-                if (installed != null && !Installer.busy(app.id)) Pill("Uninstall", { uninstall(ctx, app.pkg) }, icon = Icons.Trash)
+                if (installed != null && !Installer.busy(app.id)) Pill(str(R.string.uninstall), { uninstall(ctx, app.pkg) }, icon = Icons.Trash)
             }
             JobNote(app, Modifier.padding(top = 6.dp))
             StorageLine(app, installed)
             Box(Modifier.padding(top = 12.dp).fillMaxWidth().height(1.dp).background(C.Hair))
             Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(11.dp)) {
                 Row {
-                    Prov(Icons.Calendar, "Released", "${app.version}, ${Fmt.date(app.date)}", Modifier.weight(1f))
-                    Prov(Icons.Star, "Stars", Fmt.count(app.stars), Modifier.weight(1f))
+                    Prov(Icons.Calendar, str(R.string.prov_released), "${app.version}, ${Fmt.date(app.date)}", Modifier.weight(1f))
+                    Prov(Icons.Star, str(R.string.fact_stars), Fmt.count(app.stars), Modifier.weight(1f))
                 }
                 Row {
-                    Prov(Icons.Scale, "Licence", app.licence ?: "See repository", Modifier.weight(1f))
-                    Prov(Icons.Box, "Download", Fmt.mb(apk.size), Modifier.weight(1f))
+                    Prov(Icons.Scale, str(R.string.fact_licence), app.licence ?: str(R.string.licence_unknown), Modifier.weight(1f))
+                    Prov(Icons.Box, str(R.string.prov_download), Fmt.mb(apk.size), Modifier.weight(1f))
                 }
                 val cert = app.certSha256
                 val mismatch = installed != null && cert != null && installed.certs.isNotEmpty() && cert !in installed.certs
                 val sig = when {
-                    cert == null -> "Not recorded yet. Android still checks updates against your installed copy."
-                    installed == null -> "Checked against the developer’s key before install"
-                    mismatch -> "Different from the developer’s key. Updates are held."
-                    else -> "Matches the developer’s key"
+                    cert == null -> str(R.string.sig_unrecorded)
+                    installed == null -> str(R.string.sig_checked)
+                    mismatch -> str(R.string.sig_mismatch)
+                    else -> str(R.string.sig_matches)
                 }
-                Prov(if (mismatch) Icons.ShieldAlert else Icons.Shield, "Signing key", sig)
-                val abi = if (apk.abi in listOf("any", "universal")) "every TV" else "this TV (${abiLabel(apk.abi)})"
-                Prov(Icons.Chip, "File picked for $abi", apk.name)
+                Prov(if (mismatch) Icons.ShieldAlert else Icons.Shield, str(R.string.prov_signing), sig)
+                val picked = if (apk.abi in listOf("any", "universal")) str(R.string.file_picked_any) else str(R.string.file_picked_abi, abiLabel(apk.abi))
+                Prov(Icons.Chip, picked, apk.name)
             }
         }
     }
@@ -728,9 +728,9 @@ private fun StorageLine(app: App, installed: Installed?) {
     val need = pickApk(app).size
     Column(Modifier.padding(top = 8.dp)) {
         if (installed != null) {
-            T("Installed version ${installed.versionName ?: "?"}", 11.5.sp, color = C.Stone, maxLines = 1)
+            T(str(R.string.installed_version, installed.versionName ?: "?"), 11.5.sp, color = C.Stone, maxLines = 1)
         } else {
-            T("Needs ${Fmt.mb(need)}. ${Fmt.gb(free)} free on this TV.", 11.5.sp, color = C.Stone, maxLines = 1)
+            T(str(R.string.needs_space, Fmt.mb(need), Fmt.gb(free)), 11.5.sp, color = C.Stone, maxLines = 1)
             Row(Modifier.padding(top = 5.dp).fillMaxWidth().height(4.dp).clip(CircleShape).background(C.WallDeep)) {
                 val used = if (total > 0) (total - free).toFloat() / total else 0f
                 Box(Modifier.fillMaxHeight().weight(used.coerceIn(0.01f, 0.98f)).background(C.Stone2))
@@ -785,35 +785,35 @@ private fun SearchScreen(query: String, onQuery: (String) -> Unit, openApp: (Str
                             .onFocusChanged { if (!it.isFocused && editing) editing = false },
                     )
                     if (query.isEmpty()) {
-                        T(if (editing) "Type an app name or what it does" else "Search apps", 22.sp, color = C.Stone2, tight = true, maxLines = 1)
+                        T(str(if (editing) R.string.search_hint_editing else R.string.search_hint), 22.sp, color = C.Stone2, tight = true, maxLines = 1)
                     }
                 }
                 if (f && !editing) {
                     Box(Modifier.background(C.accent, CircleShape).padding(horizontal = 11.dp, vertical = 4.dp)) {
-                        T(if (query.isEmpty()) "Press OK to type" else "OK to edit", 11.5.sp, color = C.OnAccent, weight = FontWeight.SemiBold)
+                        T(str(if (query.isEmpty()) R.string.search_press_ok else R.string.search_ok_edit), 11.5.sp, color = C.OnAccent, weight = FontWeight.SemiBold)
                     }
                 }
             }
         }
         Row(side.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            T("Try", 12.5.sp, Modifier.padding(end = 4.dp), color = C.Stone)
+            T(str(R.string.search_try), 12.5.sp, Modifier.padding(end = 4.dp), color = C.Stone)
             val chips = listOf("video player", "game streaming", "launcher", "web browser", "music", "screensaver")
             chips.forEach { s -> Chip(s, s == query.trim()) { onQuery(s) } }
-            if (query.isNotEmpty()) Chip("Clear", false) { onQuery("") }
+            if (query.isNotEmpty()) Chip(str(R.string.search_clear), false) { onQuery("") }
         }
         val q = query.trim().lowercase()
         val results = remember(q, Catalog.apps, Prefs.hideStreams) { search(q) }
         val shown = if (q.isEmpty()) Catalog.visible.take(20).map { it to true } else results
         T(
             when {
-                q.isEmpty() -> "Most starred"
-                results.isEmpty() -> "No apps match “${query.trim()}”"
-                else -> "${results.size} ${if (results.size == 1) "app" else "apps"} for “${query.trim()}”"
+                q.isEmpty() -> str(R.string.row_starred)
+                results.isEmpty() -> str(R.string.search_none, query.trim())
+                else -> plural(R.plurals.search_results, results.size, results.size, query.trim())
             },
             13.5.sp, side.padding(top = 20.dp), color = C.Stone, weight = FontWeight.Medium,
         )
         if (q.isNotEmpty() && results.isEmpty()) {
-            T("Try a shorter word, or what the app does, like “video player”.", 15.5.sp, side.padding(top = 10.dp), color = C.Stone)
+            T(str(R.string.search_tip), 15.5.sp, side.padding(top = 10.dp), color = C.Stone)
         }
         LazyRow(
             Modifier.padding(top = 2.dp),
@@ -869,7 +869,7 @@ private fun ResultCard(a: App, q: String, byName: Boolean, onClick: () -> Unit) 
             val field = listOf(a.note, a.desc).firstOrNull { q.isNotEmpty() && it.lowercase().contains(q) }
             val why = if (byName || field == null) buildAnnotatedString { append(a.note) } else buildAnnotatedString {
                 val i = field.lowercase().indexOf(q)
-                append("Matches: ")
+                append(str(R.string.search_matches) + " ")
                 append(field.substring(0, i))
                 withStyle(SpanStyle(background = C.accent.copy(alpha = 0.18f), color = C.Ink)) { append(field.substring(i, i + q.length)) }
                 append(field.substring(i + q.length))
@@ -920,26 +920,26 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
     Column(Modifier.fillMaxSize().padding(horizontal = 48.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Column(Modifier.weight(1f)) {
-                T("My apps", 32.sp, weight = FontWeight.SemiBold, tight = true)
+                T(str(R.string.mine_title), 32.sp, weight = FontWeight.SemiBold, tight = true)
                 val parts = buildList {
-                    if (updatable.isNotEmpty()) add("${updatable.size} ${if (updatable.size == 1) "update" else "updates"} ready")
-                    if (held > 0) add("$held held for review")
-                    add("${mine.size} from Open Shelf")
-                    if (others != null) add("${otherList.size} other ${if (otherList.size == 1) "app" else "apps"} on this TV")
+                    if (updatable.isNotEmpty()) add(plural(R.plurals.updates_ready, updatable.size, updatable.size))
+                    if (held > 0) add(str(R.string.held_count, held))
+                    add(str(R.string.from_shelf_count, mine.size))
+                    if (others != null) add(plural(R.plurals.other_apps, otherList.size, otherList.size))
                 }
                 T(parts.joinToString(" · "), 13.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
             }
             if (updatable.isNotEmpty()) {
-                Pill("Update all", { updatable.forEach { (a, _) -> Installer.start(ctx, a) } }, solid = true, icon = Icons.Download, requester = handoff.target)
+                Pill(str(R.string.update_all), { updatable.forEach { (a, _) -> Installer.start(ctx, a) } }, solid = true, icon = Icons.Download, requester = handoff.target)
             }
         }
         LazyColumn(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp), contentPadding = PaddingValues(top = 6.dp, bottom = 24.dp)) {
-            item { Section("From Open Shelf") }
+            item { Section(str(R.string.section_from_shelf)) }
             if (mine.isEmpty()) {
                 item {
                     Row(Modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        T("Apps you install from Open Shelf appear here, with updates.", 13.5.sp, Modifier.padding(end = 14.dp), color = C.Ink2)
-                        Pill("Find an app", goDiscover, requester = if (updatable.isEmpty()) handoff.target else null)
+                        T(str(R.string.mine_empty), 13.5.sp, Modifier.padding(end = 14.dp), color = C.Ink2)
+                        Pill(str(R.string.find_app), goDiscover, requester = if (updatable.isEmpty()) handoff.target else null)
                     }
                 }
             }
@@ -953,7 +953,7 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                     title = a.name,
                     sub = when (st) {
                         State.Update -> "${i.versionName} → ${a.version} · ${Fmt.mb(pickApk(a).size)}"
-                        State.Held -> "${i.versionName} · signed with a different key"
+                        State.Held -> str(R.string.held_sub, i.versionName ?: "?")
                         else -> i.versionName ?: ""
                     },
                 ) { f ->
@@ -962,16 +962,16 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                             val job = Installer.jobs[a.id]
                             val frac = (job as? Job.Downloading)?.fraction ?: 0.9f
                             Ring(frac, C.accent, C.Hair2)
-                            T(if (job is Job.Downloading) "  Downloading ${(frac * 100).toInt()}%" else "  Installing", 12.5.sp, color = C.Ink2, weight = FontWeight.Medium)
+                            T("  " + if (job is Job.Downloading) str(R.string.job_downloading, (frac * 100).toInt()) else str(R.string.job_installing), 12.5.sp, color = C.Ink2, weight = FontWeight.Medium)
                         }
-                        State.Update -> { Ico(Icons.Up, 17.dp, C.accent); T("  Update ready", 12.5.sp, color = C.Ink2, weight = FontWeight.Medium); MiniPill("Update", f) }
-                        State.Held -> { Ico(Icons.ShieldAlert, 17.dp, C.Ink); T("  Update held", 12.5.sp, weight = FontWeight.SemiBold); MiniPill("Review", f) }
-                        State.Ok -> { Ico(Icons.Check, 17.dp, C.Stone); T("  Up to date", 12.5.sp, color = C.Stone); MiniPill("Details", f) }
+                        State.Update -> { Ico(Icons.Up, 17.dp, C.accent); T("  " + str(R.string.status_update_ready), 12.5.sp, color = C.Ink2, weight = FontWeight.Medium); MiniPill(str(R.string.action_update), f) }
+                        State.Held -> { Ico(Icons.ShieldAlert, 17.dp, C.Ink); T("  " + str(R.string.update_held), 12.5.sp, weight = FontWeight.SemiBold); MiniPill(str(R.string.review), f) }
+                        State.Ok -> { Ico(Icons.Check, 17.dp, C.Stone); T("  " + str(R.string.up_to_date), 12.5.sp, color = C.Stone); MiniPill(str(R.string.details), f) }
                     }
                 }
             }
             if (otherList.isNotEmpty()) {
-                item { Section("Other apps on this TV") }
+                item { Section(str(R.string.section_other)) }
                 items(otherList, key = { it.pkg }) { o ->
                     AppRow(
                         focusRequester = if (mine.isEmpty() && o == otherList.first() && updatable.isEmpty()) null else null,
@@ -982,8 +982,8 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                             }
                         },
                         title = o.label,
-                        sub = listOfNotNull(o.version, "not in the Open Shelf list").joinToString(" · "),
-                    ) { f -> MiniPill("Open", f) }
+                        sub = listOfNotNull(o.version, str(R.string.not_in_list)).joinToString(" · "),
+                    ) { f -> MiniPill(str(R.string.action_open), f) }
                 }
             }
         }
@@ -1042,30 +1042,30 @@ private fun SettingsScreen(handoff: FocusHandoff) {
     val cache = remember(cacheTick, tick) { Device.cacheBytes(ctx) }
     val version = remember { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }
     val rows = listOf(
-        Setting("Accent colour", Prefs.accents[Prefs.accent].first,
-            "Colours the focus ring, the focused button and the dot that marks installed apps. Press OK to try the next one.") { Prefs.nextAccent() },
-        Setting("Appearance", Prefs.themes[Prefs.theme],
-            "Light hangs the shelf on a white wall, Dark on a charcoal one for evenings. Match TV follows the TV’s own dark setting. Press OK to switch.") { Prefs.nextTheme() },
-        Setting("Install apps from Open Shelf", if (canInstall) "Allowed" else "Not allowed yet",
-            "Android asks you to allow this once. After that, Open Shelf can install and update apps, and each install still asks you to confirm.") {
+        Setting(str(R.string.set_accent), str(Prefs.accents[Prefs.accent].first),
+            str(R.string.set_accent_help)) { Prefs.nextAccent() },
+        Setting(str(R.string.set_appearance), str(Prefs.themes[Prefs.theme]),
+            str(R.string.set_appearance_help)) { Prefs.nextTheme() },
+        Setting(str(R.string.set_install), str(if (canInstall) R.string.allowed else R.string.not_allowed),
+            str(R.string.set_install_help)) {
             Installer.openInstallPermission(ctx)
         },
-        Setting("APK type", "Automatic · ${abiLabel(Build.SUPPORTED_ABIS.first())}",
-            "Many apps publish a different file for each kind of chip. Open Shelf picks the one that fits this TV. Supported here: ${Build.SUPPORTED_ABIS.joinToString(", ")}."),
-        Setting("If an app’s signing key changes", "Hold the update",
-            "Every release is signed by its developer. If a new file is signed by someone else, Open Shelf keeps your current version and doesn’t install it."),
-        Setting("Catalog", "${Fmt.count(Catalog.apps.size)} apps · ${Fmt.shortDate(Catalog.generated)}",
-            "Every Android TV app on GitHub that publishes an APK and has had a release in the last 3 years. Checked on ${Fmt.date(Catalog.generated)}. This version carries the list inside the app."),
-        Setting("Hide apps with fewer stars than", "${Catalog.MIN_STARS}",
-            "Keeps very new or little-used apps out of Discover. ${Fmt.count(Catalog.apps.count { it.stars < Catalog.MIN_STARS })} apps are hidden. Search still finds them by their exact name."),
-        Setting("Hide IPTV and stream apps", if (Prefs.hideStreams) "On · ${Fmt.count(Catalog.apps.count { it.streams })} hidden" else "Off",
-            "Hides IPTV players, live TV channel apps and debrid, torrent or Stremio streaming clients. They’re open source, but they play streams you bring yourself. Press OK to switch.") { Prefs.toggleStreams() },
-        Setting("Download cache", "${Fmt.mb(cache)} · Clear",
-            "Downloaded APK files are kept here so you can reinstall without downloading again. Press OK to clear them.") {
+        Setting(str(R.string.set_apk), str(R.string.apk_auto, abiLabel(Build.SUPPORTED_ABIS.first())),
+            str(R.string.set_apk_help, Build.SUPPORTED_ABIS.joinToString(", "))),
+        Setting(str(R.string.set_key), str(R.string.set_key_value),
+            str(R.string.set_key_help)),
+        Setting(str(R.string.set_catalog), str(R.string.catalog_value, Fmt.count(Catalog.apps.size), Fmt.shortDate(Catalog.generated)),
+            str(R.string.catalog_help, Fmt.date(Catalog.generated))),
+        Setting(str(R.string.set_stars), "${Catalog.MIN_STARS}",
+            str(R.string.set_stars_help, Fmt.count(Catalog.apps.count { it.stars < Catalog.MIN_STARS }))),
+        Setting(str(R.string.set_streams), if (Prefs.hideStreams) str(R.string.streams_on, Fmt.count(Catalog.apps.count { it.streams })) else str(R.string.streams_off),
+            str(R.string.set_streams_help)) { Prefs.toggleStreams() },
+        Setting(str(R.string.set_cache), str(R.string.cache_value, Fmt.mb(cache)),
+            str(R.string.set_cache_help)) {
             Device.clearCache(ctx); cacheTick++
         },
-        Setting("About", "Open Shelf $version",
-            "Open Shelf is open source under GPL-3.0, at github.com/wingedpanther/openshelf. App names, art and releases come from each project’s GitHub repository."),
+        Setting(str(R.string.set_about), str(R.string.about_value, version ?: ""),
+            str(R.string.about_help)),
     )
     var focusedIndex by remember { mutableIntStateOf(0) }
     Row(Modifier.fillMaxSize().padding(horizontal = 48.dp)) {
@@ -1081,7 +1081,7 @@ private fun SettingsScreen(handoff: FocusHandoff) {
                     T(s.help, 14.5.sp, Modifier.padding(top = 10.dp), color = C.Ink2)
                 }
             }
-            T("Version $version · ${Fmt.count(Catalog.apps.size)} apps", 12.5.sp, Modifier.padding(top = 14.dp), color = C.Stone)
+            T(str(R.string.settings_footer, version ?: "", Fmt.count(Catalog.apps.size)), 12.5.sp, Modifier.padding(top = 14.dp), color = C.Stone)
         }
         Spacer(Modifier.width(52.dp))
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
